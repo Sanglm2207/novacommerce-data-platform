@@ -1,0 +1,18 @@
+name: NovaCommerce ETL CI
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unit and PostgreSQL integration tests
+        run: docker compose -p novacommerce-ci -f docker/compose.ci.yaml up --build --abort-on-container-exit --exit-code-from tests tests
+      - name: Logs on failure
+        if: failure()
+        run: docker compose -p novacommerce-ci -f docker/compose.ci.yaml logs --no-color
+      - name: Teardown
+        if: always()
+        run: docker compose -p novacommerce-ci -f docker/compose.ci.yaml down -v --remove-orphans

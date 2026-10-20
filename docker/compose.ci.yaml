@@ -1,0 +1,30 @@
+services:
+  postgres-test:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: novacommerce_oltp
+      POSTGRES_USER: novacommerce
+      POSTGRES_PASSWORD: ci_local_only
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U novacommerce -d novacommerce_oltp"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - ../database/migrations:/docker-entrypoint-initdb.d:ro
+    tmpfs:
+      - /var/lib/postgresql/data
+  tests:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.etl
+    environment:
+      POSTGRES_HOST: postgres-test
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: novacommerce_oltp
+      POSTGRES_USER: novacommerce
+      POSTGRES_PASSWORD: ci_local_only
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+    command: ["python", "-m", "pytest", "-q", "tests/test_day08_unit.py", "tests/test_day08_integration.py"]

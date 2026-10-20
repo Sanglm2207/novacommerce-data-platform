@@ -1,0 +1,15 @@
+services:
+  etl:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.etl
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: ${POSTGRES_DB:?required}
+      POSTGRES_USER: ${POSTGRES_USER:?required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
